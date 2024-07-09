@@ -35,11 +35,32 @@ def process_text(text):
     for word, digit in num_word_to_digit.items():
         text = text.replace(word, digit)
 
+    #数字でないoneを1からoneに戻す
+    num_digit_to_one = {
+        'which 1': 'which one', 'smart 1': 'smart one', 'the 1': 'the one', 'this 1': 'this one', 'last 1': 'last one', 'some1': 'someone', 'any1': 'anyone', 'd1': 'done', 'm1y': 'money', 'ph1': 'phone', 'teleph1': 'telephone', 'conditi1r': 'conditioner', 'iPh1': 'iPhone', 'smartph1': 'smartphone', 'headph1': 'headphone',
+        'st1s': 'stones', 'cellph1': 'cellphone', 'n1': 'none', 'g1': 'gone',
+        'al1': 'alone', 't1': 'tone', 'z1': 'zone', 'b1': 'bone',
+    }
+    for word, digit in num_digit_to_one.items():
+        text = text.replace(word, digit)
+
+    #hi,yeah,just curiousを削除
+    text = re.sub(r'\b(hi)\b', '', text)
+    text = re.sub(r'\b(yeah)\b', '', text)
+    text = re.sub(r'\b(just curious)\b', '', text)
+
     # 小数点のピリオドを削除
     text = re.sub(r'(?<!\d)\.(?!\d)', '', text)
 
     # 冠詞の削除
     text = re.sub(r'\b(a|an|the)\b', '', text)
+
+    #can you tell me ~ , can you tell ~,Could you tell me~,Can you describe for me~の削除
+    text = re.sub(r'\b(can you tell me)\b', '', text)
+    text = re.sub(r'\b(could you tell me)\b', '', text)
+    text = re.sub(r'\b(can you tell)\b', '', text)
+    text = re.sub(r'\b(could you tell)\b', '', text)
+    text = re.sub(r'\b(can you describe for me)\b', '', text)
 
     # 短縮形のカンマの追加
     contractions = {
@@ -48,6 +69,11 @@ def process_text(text):
     }
     for contraction, correct in contractions.items():
         text = text.replace(contraction, correct)
+
+    #thank you,thanks,pleaseの削除
+    text = re.sub(r'\b(thank you)\b', '', text)
+    text = re.sub(r'\b(thanks)\b', '', text)
+    text = re.sub(r'\b(please)\b', '', text)
 
     # 句読点をスペースに変換
     text = re.sub(r"[^\w\s':]", ' ', text)
@@ -378,7 +404,7 @@ def main():
     model = VQAModel(vocab_size=len(train_dataset.question2idx)+1, n_answer=len(train_dataset.answer2idx)).to(device)
 
     # optimizer / criterion
-    num_epoch = 20
+    num_epoch = 30
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 
