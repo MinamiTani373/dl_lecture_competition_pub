@@ -390,10 +390,18 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # dataloader / model
+    #前処理変更箇所
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor()
+    transforms.Resize((224, 224)),
+    transforms.RandomHorizontalFlip(),  # 水平反転
+    transforms.RandomRotation(10),      # 10度までのランダム回転
+    #transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),  # 正規化
+    transforms.RandomErasing(p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3)),#マスク
+    transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5))#ぼかし
     ])
+    
     train_dataset = VQADataset(df_path="./data/train.json", image_dir="./data/train", transform=transform)
     test_dataset = VQADataset(df_path="./data/valid.json", image_dir="./data/valid", transform=transform, answer=False)
     test_dataset.update_dict(train_dataset)
@@ -404,7 +412,7 @@ def main():
     model = VQAModel(vocab_size=len(train_dataset.question2idx)+1, n_answer=len(train_dataset.answer2idx)).to(device)
 
     # optimizer / criterion
-    num_epoch = 30
+    num_epoch = 20
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 
